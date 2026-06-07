@@ -1,8 +1,7 @@
 import pytest
 import joblib
 from pathlib import Path
-from testing import ARTIFACT_DIR
-
+ARTIFACT_DIR = Path("artifacts")
 @pytest.mark.skipif(
     not (ARTIFACT_DIR / "model_pipeline.joblib").exists(),
     reason="Artifact not available"

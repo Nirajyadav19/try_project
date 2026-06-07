@@ -1,7 +1,0 @@
-LOB,broker_id,hit_ratio_broker,days_before_effective_date,premium_size,broker_commission,underwriter_turnaround_time,New_vs_Renewal,Historical_Submission_Volume,Historical_Bind_Ratio
-NT,1109,0.477958237,0,4370,,1,NEW,25,0.4
-"GL,PD",1074,0.488644244,0,17759.68,,0,NEW,528,0.59280303
-CL,1102,0.694100357,0,0,,0,NEW,1375,0.645090909
-GL,1128,0.48348135,4,838.4,90,0,NEW,1464,0.410519126
-CL,1128,0.48348135,1,1160.4,114,0,NEW,1464,0.410519126
-

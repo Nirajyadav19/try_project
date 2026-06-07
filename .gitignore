@@ -1,6 +1,9 @@
-# Python cache
+docs/
+artifacts/
+data/
+
 __pycache__/
 *.pyc
-data/
-docs/
+.env
+venv/
 testvenv/

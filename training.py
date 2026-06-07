@@ -15,6 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.compose import ColumnTransformer
 from imblearn.over_sampling import SMOTE
+from itertools import chain
 import joblib
 from pathlib import Path
 
@@ -40,32 +41,39 @@ mean_commission = data.loc[data['target'] == 1, 'broker_commission'].median()
 data.loc[data['target'] == 0, 'broker_commission'] = data.loc[data['target'] == 0, 'broker_commission'].fillna(0)
 data.loc[data['target'] == 1, 'broker_commission'] = data.loc[data['target'] == 1, 'broker_commission'].fillna(mean_commission)
 
-# Preprocess LOB column (split and explode)
-data['LOB'] = data['LOB'].str.split(',')
-data['LOB'] = data['LOB'].apply(lambda x: [i.strip() for i in x])
-data = data.explode('LOB')
+# Split and strip the 'LOB' strings into lists
+data['LOB'] = data['LOB'].apply(lambda x: [lob.strip() for lob in x.split(',')])
+
+# Extract all LOBs from the training set
+lob_categories = sorted(set(chain.from_iterable(data['LOB'])))
+
+# Create binary columns in fixed order
+for lob in lob_categories:
+    data[lob] = data['LOB'].apply(lambda x: int(lob in x))
+data = data.drop(columns=['LOB'],axis=1)
 
 # Replace negative values
 data['days_before_effective_date'] = data['days_before_effective_date'].abs()
+
+# save lob_categories for use later
+joblib.dump(lob_categories,ARTIFACT_DIR / 'lob_categories.joblib')
 
 #------------------------------------------
 # Data preprocessing 
 #------------------------------------------
 
 # Define categorical and numerical columns
-OHE_columns = ['LOB', 'New_vs_Renewal']
+OHE_columns = ['New_vs_Renewal']
 numerical_cols = ["broker_id", 'days_before_effective_date', 'premium_size', 'broker_commission',
                   'underwriter_turnaround_time', 'Historical_Submission_Volume']
-passthrough = ["hit_ratio_broker", "Historical_Bind_Ratio"]
+passthrough = ["hit_ratio_broker", "Historical_Bind_Ratio"] +  lob_categories
 
-# Identity transformer 
-identity_transformer = FunctionTransformer()  
 
 # Define preprocessor
 preprocessor = ColumnTransformer([
     ("categorical", OneHotEncoder(handle_unknown='ignore'), OHE_columns),
     ("numerical", StandardScaler(), numerical_cols),
-    ("passthrough", identity_transformer, passthrough)
+    ("passthrough", FunctionTransformer(), passthrough)
 ])
 
 # Split features and target

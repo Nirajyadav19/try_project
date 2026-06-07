@@ -5,15 +5,17 @@ from pathlib import Path
  
 ARTIFACT_DIR = Path("artifacts")
 pipeline = joblib.load(ARTIFACT_DIR / "model_pipeline.joblib")
+lob_categories = joblib.load(ARTIFACT_DIR /'lob_categories.joblib')
 DATA_DIR = Path("data")
 data_path = DATA_DIR / "validation.csv"
 
 # Load the csv file
 data = pd.read_csv(data_path)
 
-data['LOB'] = data['LOB'].str.split(',')
-data['LOB'] = data['LOB'].apply(lambda x: [i.strip() for i in x])
-data = data.explode('LOB')
+data['LOB'] = data['LOB'].apply(lambda x: [lob.strip() for lob in x.split(',')])
+for lob in lob_categories:
+    data[lob] = data['LOB'].apply(lambda x: int(lob in x))
+data = data.drop(columns=['LOB'],axis=1)
 mean_commission = data.loc[data['target'] == 1, 'broker_commission'].median()
 data.loc[data['target'] == 0, 'broker_commission'] = data.loc[data['target'] == 0, 'broker_commission'].fillna(0)
 data.loc[data['target'] == 1, 'broker_commission'] = data.loc[data['target'] == 1, 'broker_commission'].fillna(mean_commission)

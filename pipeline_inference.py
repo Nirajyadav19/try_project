@@ -4,6 +4,7 @@ from pathlib import Path
  
 ARTIFACT_DIR = Path("artifacts") 
 pipeline = joblib.load(ARTIFACT_DIR / "model_pipeline.joblib")
+lob_categories = joblib.load(ARTIFACT_DIR /'lob_categories.joblib')
 DATA_DIR = Path("data")
 data_path1 = DATA_DIR / "inference_data.csv"
 data_path2 = DATA_DIR / "inference_testing_data.csv"
@@ -11,9 +12,12 @@ data_path2 = DATA_DIR / "inference_testing_data.csv"
 data = pd.read_csv(data_path1)
 inference_data=pd.read_csv(data_path2)
 print(data)
-inference_data['LOB'] = inference_data['LOB'].str.split(',')
-inference_data['LOB'] = inference_data['LOB'].apply(lambda x: [i.strip() for i in x])
-inference_data = inference_data.explode('LOB')
+
+inference_data['LOB'] = inference_data['LOB'].apply(lambda x: [lob.strip() for lob in x.split(',')])
+for lob in lob_categories:
+    inference_data[lob] = inference_data['LOB'].apply(lambda x: int(lob in x))
+
+inference_data = inference_data.drop(columns=['LOB'],axis=1)
 inference_data['broker_commission'] = inference_data['broker_commission'].fillna(0)
 inference_data['days_before_effective_date'] = inference_data['days_before_effective_date'].abs()
 
